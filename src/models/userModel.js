@@ -43,7 +43,7 @@ const userSchema = new Schema(
         },
         image: {
             type: String,
-            default: defaultImagePath,
+            required: [true, 'Product image is Required'],
         },
         address: {
             type: String,

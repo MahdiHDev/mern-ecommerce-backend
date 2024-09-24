@@ -9,6 +9,8 @@ const userRouter = require('./routers/userRouter');
 const seedRouter = require('./routers/seedRouter');
 const { errorResponse } = require('./controllers/responseController');
 const authRouter = require('./routers/authRouter');
+const categoryRouter = require('./routers/categoryRouter');
+const productRouter = require('./routers/productRouter');
 
 const app = express();
 
@@ -18,8 +20,8 @@ const rateLimiter = rateLimit({
     message: 'Too many request from this IP. Please try again later',
 });
 
-app.use(cookieParser);
-app.use(rateLimiter);
+app.use(cookieParser());
+// app.use(rateLimiter);
 app.use(morgan('dev'));
 app.use(xssClean());
 app.use(bodyParser.json());
@@ -28,6 +30,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/seed', seedRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/products', productRouter);
 
 app.get('/test', (req, res) => {
     res.status(200).send({

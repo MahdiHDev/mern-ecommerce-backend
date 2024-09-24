@@ -30,6 +30,66 @@ const validateUserRegistration = [
     body('image').optional().isString().withMessage('User image is optional'),
 ];
 
+const validateUserLogin = [
+    body('email')
+        .trim()
+        .notEmpty()
+        .withMessage('Email is required')
+        .isEmail()
+        .withMessage('Invalid email address'),
+    body('password')
+        .trim()
+        .notEmpty()
+        .withMessage('Password is required')
+        .isLength({ min: 6 })
+        .withMessage('Password should contain at least 6 charecter'),
+];
+const validateUserPasswordUpdate = [
+    body('oldPassword')
+        .trim()
+        .notEmpty()
+        .withMessage('Old Password is required, Enter your old password')
+        .isLength({ min: 6 })
+        .withMessage('Old Password should contain at least 6 charecter'),
+    body('newPassword')
+        .trim()
+        .notEmpty()
+        .withMessage('New Password is required, Enter your New password')
+        .isLength({ min: 6 })
+        .withMessage('New Password should contain at least 6 charecter'),
+    body('confirmedPassword').custom((value, { req }) => {
+        if (value !== req.body.newPassword) {
+            throw new Error('Password did not match');
+        }
+        return true;
+    }),
+];
+
+const validateUserForgetPassword = [
+    body('email')
+        .trim()
+        .notEmpty()
+        .withMessage('Email is required')
+        .isEmail()
+        .withMessage('Invalid email address'),
+];
+
+const validateUserResetPassword = [
+    body('token').trim().notEmpty().withMessage('Token is missing.'),
+    body('password')
+        .trim()
+        .notEmpty()
+        .withMessage('Password is required')
+        .isLength({ min: 6 })
+        .withMessage('Password should contain at least 6 charecter'),
+];
+
 // sign in validation
 
-module.exports = { validateUserRegistration };
+module.exports = {
+    validateUserRegistration,
+    validateUserLogin,
+    validateUserPasswordUpdate,
+    validateUserForgetPassword,
+    validateUserResetPassword,
+};
