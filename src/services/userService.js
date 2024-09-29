@@ -2,6 +2,7 @@ const createError = require('http-errors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
+const cloudinary = require('../config/cloudinary');
 const { deleteImage } = require('../Helper/deleteImage');
 const { findWithId } = require('./findItem');
 const { createJSONWebToken } = require('../Helper/jsonwebtoken');
@@ -9,6 +10,7 @@ const { jwtResetPasswordKey, clientURL } = require('../secret');
 const emailWithNodeMailer = require('../Helper/email');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../Helper/sendEmail');
+const publicIdWithoutExtensionFromUrl = require('../Helper/cloudinaryHelper');
 
 const findUsers = async (search, limit, page) => {
     try {
@@ -62,14 +64,37 @@ const findUserById = async (id, option = {}) => {
 
 const deleteUserById = async (id, option = {}) => {
     try {
-        const user = await User.findByIdAndDelete({
+        // const user = await User.findByIdAndDelete({
+        //     _id: id,
+        //     isAdmin: false,
+        // });
+
+        // if (user && user.image) {
+        //     deleteImage(user.image);
+        // }
+
+        const existingUser = await User.findOne({
+            _id: id,
+        });
+
+        if (existingUser && existingUser.image) {
+            const publicId = await publicIdWithoutExtensionFromUrl(
+                existingUser.image
+            );
+
+            const { result } = await cloudinary.uploader.destroy(
+                `ecommerceMern/${publicId}`
+            );
+            if (result !== 'ok') {
+                throw new Error(
+                    'User image was not deleted successfully from cloudinary. Please try again.'
+                );
+            }
+        }
+        await User.findByIdAndDelete({
             _id: id,
             isAdmin: false,
         });
-
-        if (user && user.image) {
-            deleteImage(user.image);
-        }
     } catch (error) {
         if (error instanceof mongoose.Error.CastError) {
             throw createError(404, 'Invalid Id');
@@ -82,6 +107,10 @@ const updateUserById = async (userId, req) => {
     try {
         const options = { password: 0 };
         const user = await findWithId(User, userId, options);
+
+        if (!user) {
+            throw createError(404, 'User not found');
+        }
 
         const updateOptions = {
             new: true,
@@ -99,7 +128,7 @@ const updateUserById = async (userId, req) => {
             }
         }
 
-        const image = req.file;
+        const image = req.file.path;
         if (image) {
             if (image.size > 1024 * 1024 * 2) {
                 throw createError(
@@ -107,11 +136,13 @@ const updateUserById = async (userId, req) => {
                     'File to large. it might be less then 2 MB'
                 );
             }
-            updates.image = image.path;
-            userId.image !== 'default.jpg' && deleteImage(userId.image);
+            const response = await cloudinary.uploader.upload(image, {
+                folder: 'ecommerceMern/users',
+            });
+            updates.image = response.secure_url;
         }
 
-        delete updates.email;
+        // delete updates.email;
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
@@ -122,6 +153,20 @@ const updateUserById = async (userId, req) => {
         if (!updatedUser) {
             throw createError(404, 'User with this id does not exist');
         }
+
+        if (user.image) {
+            const publicId = await publicIdWithoutExtensionFromUrl(user.image);
+
+            const { result } = await cloudinary.uploader.destroy(
+                `ecommerceMern/products/${publicId}`
+            );
+            if (result !== 'ok') {
+                throw new Error(
+                    'User image was not deleted successfully from cloudinary. Please try again.'
+                );
+            }
+        }
+
         return updatedUser;
     } catch (error) {
         if (error instanceof mongoose.Error.CastError) {

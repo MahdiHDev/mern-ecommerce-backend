@@ -27,6 +27,7 @@ const {
 } = require('../services/userService');
 const checkUserExists = require('../Helper/checkUserExist');
 const sendEmail = require('../Helper/sendEmail');
+const cloudinary = require('../config/cloudinary');
 
 const handleGetUsers = async (req, res, next) => {
     try {
@@ -83,6 +84,7 @@ const handleProcessRegister = async (req, res, next) => {
         const { name, email, password, phone, address } = req.body;
 
         const image = req.file;
+
         if (image && image.size > 1024 * 1024 * 2) {
             throw createError(400, 'File too large, it must be less than 2 MB');
         }
@@ -128,6 +130,7 @@ const handleProcessRegister = async (req, res, next) => {
         return successResponse(res, {
             statusCode: 200,
             message: `Please go to your ${email} for completing your registration process`,
+            payload: token,
         });
     } catch (error) {
         next(error);
@@ -148,6 +151,14 @@ const handleActivateUserAccount = async (req, res, next) => {
                 throw createError(409, 'User already exist please sign in');
             }
 
+            const image = decoded.image;
+            if (image) {
+                const response = await cloudinary.uploader.upload(image, {
+                    folder: 'ecommerceMern/users',
+                });
+
+                decoded.image = response.secure_url;
+            }
             await User.create(decoded);
 
             return successResponse(res, {

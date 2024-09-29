@@ -6,9 +6,9 @@ const deleteImage = async (userImagePath) => {
             await fs.access(userImagePath);
             await fs.unlink(userImagePath);
         }
-        console.log('user image was deleted');
+        console.log('image was deleted');
     } catch (error) {
-        console.error('user image does not exist');
+        throw error;
     }
 };
 module.exports = { deleteImage };

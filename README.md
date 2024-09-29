@@ -56,5 +56,8 @@
 53. Product API - create seed route for testing products
 54. Product API - Create Product POST /api/products
 55. Product API - Read Product GET /api/products , GET /api/products/:slug
-56. Product API - Update Product
-57. Product API - Delete Product
+56. Product API - Delete Product DELETE /api/products/:slug
+57. Product API - Update Product
+58. Product API - search products
+59. Product API - filter products
+60. Uploading files in Cloudinary
