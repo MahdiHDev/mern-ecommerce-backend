@@ -11,6 +11,7 @@ const { errorResponse } = require('./controllers/responseController');
 const authRouter = require('./routers/authRouter');
 const categoryRouter = require('./routers/categoryRouter');
 const productRouter = require('./routers/productRouter');
+const homeRouter = require('./routers/home');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/seed', seedRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/products', productRouter);
+app.use('/', homeRouter);
 
 app.get('/test', (req, res) => {
     res.status(200).send({
